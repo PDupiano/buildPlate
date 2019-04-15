@@ -11,9 +11,13 @@ Code is unfortunately incomplete. Was trying to build a function to arrange item
 
 To run the code:
 clone the repo and using the following:
+<br/>
 g++ -o ./outputs/arrange arrange.cpp
+<br/>
 
 then to run simply call:
+<br/>
 ./outputs/arrange
+<br/>
 
 You will then find an output.bmp in the outputs folder showing how the parts are arranged on the build plate
