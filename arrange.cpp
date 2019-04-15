@@ -113,13 +113,10 @@ int main ()
 	testMap.insert(std::pair<std::string, box>("3DBenchy.stl", read_stl("./testModels/3DBenchy.stl")));
 
 	boom.push_back(read_stl("./testModels/cube.stl"));
-	//boom.push_back(read_stl("cube.stl"));
-	//boom.push_back(read_stl("cube.stl"));
 	boom.push_back(read_stl("./testModels/cube.stl"));
 	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
 	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
 	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
-	//boom.push_back(read_stl("business_card_holder.stl"));
 	boom.push_back(read_stl("./testModels/GnomeScan.stl"));
 
 	sort(boom.begin(), boom.end(), compareBox);
@@ -240,6 +237,8 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 						}
 					}
 				}
+				std::cout << "innerBox: " << innerBoxToCheck.diagonal<< std::endl;
+				innerBoxToCheck.diagonal = (295*195);
 				std::cout << "innerBox: " << innerBoxToCheck.diagonal<< std::endl;
 
 				if ((tempBlobH <= tempBlobV)&&(tempBlobH <= tempBlobHR) && (tempBlobH <= tempBlobVR) && (tempBlobH <= innerBoxToCheck.diagonal))
