@@ -143,7 +143,7 @@ int main ()
 		}
 		
 	}
-	image.save_image("output.bmp");
+	image.save_image("./outputs/output.bmp");
 }
 
 void setToOrigin(std::vector<box>&b)
@@ -233,7 +233,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 				}
 
 			}
-			
+
 
 			//Create Concavity Points
 
