@@ -213,13 +213,36 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 				tempBlobVR = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
 				//box tempBlobVR = box(blob.xMin, tempXmax, blob.yMin, tempYmax);
 
-				for (box innerBox : pointsToCheck)
-				{
-					tempXmax = innerBox.xMin + (*it).xMax - (*it).xMin;
-					tempYmax = innerBox.yMin + (*it).yMax - (*it).yMin;
-				}
+				tempBlobPoints = 0.0;
+				box innerBoxToCheck(0,0,0,0);
+				int index = 0;
 
-				if ((tempBlobH <= tempBlobV)&&(tempBlobH <= tempBlobHR) && (tempBlobH <= tempBlobVR))
+				for (std::vector<box>::iterator boxIt= pointsToCheck.begin() ; boxIt != pointsToCheck.end(); ++boxIt)
+				{
+					tempXmax = (*boxIt).xMin + (*it).xMax - (*it).xMin;
+					tempYmax = (*boxIt).yMin + (*it).yMax - (*it).yMin;
+					if (tempBlobPoints == 0.0)
+					{
+						tempBlobPoints = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+						index = std::distance(pointsToCheck.begin(), boxIt);
+						innerBoxToCheck = pointsToCheck[index];
+						innerBoxToCheck.diagonal = tempBlobPoints;
+					}
+					else
+					{
+						buffer = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+						if (tempBlobPoints > buffer)
+						{
+							index = std::distance(pointsToCheck.begin(), boxIt);
+							innerBoxToCheck = pointsToCheck[index];
+							tempBlobPoints = buffer;
+							innerBoxToCheck.diagonal = tempBlobPoints;
+						}
+					}
+				}
+				std::cout << "innerBox: " << innerBoxToCheck.diagonal<< std::endl;
+
+				if ((tempBlobH <= tempBlobV)&&(tempBlobH <= tempBlobHR) && (tempBlobH <= tempBlobVR) && (tempBlobH <= innerBoxToCheck.diagonal))
 				{
 					buffer = blob.xMax;
 					(*it).transform.xOffset += blob.xMax;
@@ -236,7 +259,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 					//blob.yMax = (blob.yMax > (*it).yMax) ? blob.yMax : (*it).yMax;
 
 				} 
-				else if ((tempBlobV<= tempBlobH)&&(tempBlobV<= tempBlobHR) && (tempBlobV <= tempBlobVR))
+				else if ((tempBlobV<= tempBlobH)&&(tempBlobV<= tempBlobHR) && (tempBlobV <= tempBlobVR)&& (tempBlobV <= innerBoxToCheck.diagonal))
 				{
 					buffer = blob.yMax;
 					(*it).transform.yOffset += blob.yMax;
@@ -252,7 +275,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 					}
 					blob.xMax = (blob.xMax > (*it).xMax) ? blob.xMax : (*it).xMax;
 				}
-				else if ((tempBlobHR <= tempBlobV)&&(tempBlobHR <= tempBlobH) && (tempBlobHR <= tempBlobVR))
+				else if ((tempBlobHR <= tempBlobV)&&(tempBlobHR <= tempBlobH) && (tempBlobHR <= tempBlobVR)&& (tempBlobHR <= innerBoxToCheck.diagonal))
 				{
 					buffer = (*it).transform.yOffset;
 					(*it).transform.rotation = 1;
@@ -262,7 +285,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 					blob.xMax += (*it).yMax - (*it).yMin;
 					std::cout << "Rotated HR" <<std::endl;
 				}
-				else 
+				else if ((tempBlobVR <= tempBlobV)&&(tempBlobVR <= tempBlobH) && (tempBlobVR <= tempBlobHR) && (tempBlobVR <= innerBoxToCheck.diagonal))
 				{
 					buffer = (*it).transform.xOffset;
 					(*it).transform.rotation = 1;
@@ -271,6 +294,31 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 					blob.yMax += (*it).xMax - (*it).xMin;
 					blob.xMax = (blob.xMax > (*it).yMax)? blob.xMax : (*it).yMax;
 					std::cout << "Rotated VR" <<std::endl;
+				}
+				else
+				{
+					double newXmax = innerBoxToCheck.xMin + (*it).xMax - (*it).xMin;
+					double newYmax = innerBoxToCheck.yMin + (*it).yMax - (*it).yMin;
+					blob.xMax = (blob.xMax > newXmax) ? blob.xMax : newXmax;
+					blob.yMax = (blob.yMax > newYmax) ? blob.yMax : newYmax;
+					(*it).transform.xOffset += innerBoxToCheck.xMin;
+					(*it).transform.yOffset += innerBoxToCheck.yMin;
+					pointsToCheck.clear();
+
+/*
+					//buffer = blob.xMax;
+					(*it).transform.xOffset += blob.xMax;
+					blob.xMax +=  (*it).xMax - (*it).xMin;
+					if (blob.yMax > (*it).yMax)
+					{
+						pointsToCheck.push_back(box(buffer,plateWidth,(*it).yMax, plateLength));
+					}
+					if (blob.yMax < (*it).yMax)
+					{
+						blob.yMax = (*it).yMax;
+						pointsToCheck.push_back(box(blob.xMin, blob.xMax, blob.yMax, plateLength));
+					}
+*/
 				}
 			}
 		}
