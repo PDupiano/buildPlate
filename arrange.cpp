@@ -101,30 +101,18 @@ int main ()
 	//modelMap.insert(std::pair<box, int>(read_stl("cube.stl"), 0));
 
 	//testMap.insert(std::pair<std::string, std::map<box, tMatrix> >("3dBench.stl", std::pair<box, tMatrix>(read_stl("3DBenchy.stl"), tMatrix(0,0,0)));
-	testMap.insert(std::pair<std::string, box>("cube.stl", read_stl("cube.stl")));
-	testMap.insert(std::pair<std::string, box>("3DBenchy.stl", read_stl("3DBenchy.stl")));
+	testMap.insert(std::pair<std::string, box>("cube.stl", read_stl("./testModels/cube.stl")));
+	testMap.insert(std::pair<std::string, box>("3DBenchy.stl", read_stl("./testModels/3DBenchy.stl")));
 
-/*
-	for (const auto & model: testMap)
-	{
-		
-		std::cout << "Model : " << model.first <<std::endl;
-		std::cout << "Diagonal: " << model.second.diagonal <<std::endl;
-		std::cout << "Area: " <<model.second.area <<std::endl;
-		std::cout << "Transformation: " <<model.second.transform.xOffset << " " << model.second.transform.yOffset 
-					<< " " << model.second.transform.rotation << std::endl;
-		
-	}
-	*/
-	boom.push_back(read_stl("cube.stl"));
+	boom.push_back(read_stl("./testModels/cube.stl"));
 	//boom.push_back(read_stl("cube.stl"));
 	//boom.push_back(read_stl("cube.stl"));
-	boom.push_back(read_stl("cube.stl"));
-	boom.push_back(read_stl("3DBenchy.stl"));
-	boom.push_back(read_stl("3DBenchy.stl"));
-	boom.push_back(read_stl("3DBenchy.stl"));
+	boom.push_back(read_stl("./testModels/cube.stl"));
+	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
+	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
+	boom.push_back(read_stl("./testModels/3DBenchy.stl"));
 	//boom.push_back(read_stl("business_card_holder.stl"));
-	boom.push_back(read_stl("GnomeScan.stl"));
+	boom.push_back(read_stl("./testModels/GnomeScan.stl"));
 
 	sort(boom.begin(), boom.end(), compareBox);
 	setToOrigin(boom);
@@ -172,7 +160,7 @@ void setToOrigin(std::vector<box>&b)
 void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 {
 	int numModels = b.size();
-	double tempXmax, tempYmax;
+	double tempXmax, tempYmax, oldBlobXmax, oldBlobYmax;
 	box blob(0,0,0,0);
 	for (std::vector<box>::iterator it = b.begin() ; it != b.end(); ++it)
 	{
@@ -192,6 +180,8 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 			}
 			else
 			{
+				oldBlobXmax = blob.xMax;
+				oldBlobYmax = blob.yMax;
 
 				tempXmax = blob.xMax + (*it).xMax - (*it).xMin;
 				tempYmax = (blob.yMax > (*it).yMax) ? blob.yMax : (*it).yMax;
@@ -243,6 +233,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 				}
 
 			}
+			
 
 			//Create Concavity Points
 
