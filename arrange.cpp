@@ -7,6 +7,14 @@
 #include <map>
 #include "bitmap_image.hpp"
 
+struct subBox
+{
+	double x;
+	double y;
+	double xMax;
+	double yMax;
+};
+
 class v3
 {
 	public:
@@ -116,7 +124,7 @@ int main ()
 
 	sort(boom.begin(), boom.end(), compareBox);
 	setToOrigin(boom);
-	arrangeModels(100.0,100.0,boom);
+	arrangeModels(295,195.0,boom);
 
 	for ( box model: boom)
 	{
@@ -160,8 +168,10 @@ void setToOrigin(std::vector<box>&b)
 void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 {
 	int numModels = b.size();
-	double tempXmax, tempYmax, oldBlobXmax, oldBlobYmax;
+	double tempXmax, tempYmax, oldBlobXmax, oldBlobYmax, buffer;
+	double tempBlobH, tempBlobV, tempBlobHR, tempBlobVR, tempBlobPoints;
 	box blob(0,0,0,0);
+	std::vector<box> pointsToCheck;
 	for (std::vector<box>::iterator it = b.begin() ; it != b.end(); ++it)
 	{
 		if (numModels == 1)
@@ -185,35 +195,66 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 
 				tempXmax = blob.xMax + (*it).xMax - (*it).xMin;
 				tempYmax = (blob.yMax > (*it).yMax) ? blob.yMax : (*it).yMax;
-				box tempBlobH = box(blob.xMin, tempXmax, blob.yMin, tempYmax); 
+				tempBlobH = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+				//box tempBlobH = box(blob.xMin, tempXmax, blob.yMin, tempYmax); 
 
 				tempXmax = (blob.xMax > (*it).xMax) ? blob.xMax : (*it).xMax;
 				tempYmax = blob.yMax + (*it).yMax - (*it).yMin;
-				box tempBlobV = box(blob.xMin, tempXmax, blob.yMin, tempYmax);
+				tempBlobV = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+				//box tempBlobV = box(blob.xMin, tempXmax, blob.yMin, tempYmax);
 
 				tempXmax = blob.xMax + (*it).yMax - (*it).yMin;
 				tempYmax = (blob.yMax > (*it).xMax) ? blob.yMax : (*it).xMax;
-				box tempBlobHR = box(blob.xMin, tempXmax, blob.yMin, tempYmax); 
+				tempBlobHR = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+				//box tempBlobHR = box(blob.xMin, tempXmax, blob.yMin, tempYmax); 
 
 				tempXmax = (blob.xMax > (*it).yMax) ? blob.xMax : (*it).yMax;
 				tempYmax = blob.yMax + (*it).xMax - (*it).xMin;
-				box tempBlobVR = box(blob.xMin, tempXmax, blob.yMin, tempYmax);
+				tempBlobVR = hypot(tempYmax - blob.yMin, tempXmax - blob.xMin);
+				//box tempBlobVR = box(blob.xMin, tempXmax, blob.yMin, tempYmax);
 
-				if ((tempBlobH.diagonal <= tempBlobV.diagonal)&&(tempBlobH.diagonal <= tempBlobHR.diagonal) && (tempBlobH.diagonal <= tempBlobVR.diagonal))
+				for (box innerBox : pointsToCheck)
 				{
+					tempXmax = innerBox.xMin + (*it).xMax - (*it).xMin;
+					tempYmax = innerBox.yMin + (*it).yMax - (*it).yMin;
+				}
+
+				if ((tempBlobH <= tempBlobV)&&(tempBlobH <= tempBlobHR) && (tempBlobH <= tempBlobVR))
+				{
+					buffer = blob.xMax;
 					(*it).transform.xOffset += blob.xMax;
 					blob.xMax +=  (*it).xMax - (*it).xMin;
-					blob.yMax = (blob.yMax > (*it).yMax) ? blob.yMax : (*it).yMax;
+					if (blob.yMax > (*it).yMax)
+					{
+						pointsToCheck.push_back(box(buffer,plateWidth,(*it).yMax, plateLength));
+					}
+					if (blob.yMax < (*it).yMax)
+					{
+						blob.yMax = (*it).yMax;
+						pointsToCheck.push_back(box(blob.xMin, blob.xMax, blob.yMax, plateLength));
+					}
+					//blob.yMax = (blob.yMax > (*it).yMax) ? blob.yMax : (*it).yMax;
+
 				} 
-				else if ((tempBlobV.diagonal <= tempBlobH.diagonal)&&(tempBlobV.diagonal <= tempBlobHR.diagonal) && (tempBlobV.diagonal <= tempBlobVR.diagonal))
+				else if ((tempBlobV<= tempBlobH)&&(tempBlobV<= tempBlobHR) && (tempBlobV <= tempBlobVR))
 				{
+					buffer = blob.yMax;
 					(*it).transform.yOffset += blob.yMax;
 					blob.yMax += (*it).yMax - (*it).yMin; 
+					if (blob.xMax > (*it).xMax)
+					{
+						pointsToCheck.push_back(box((*it).xMax,plateWidth,blob.yMax, plateLength));
+					}
+					if (blob.xMax < (*it).xMax)
+					{
+						pointsToCheck.push_back(box(blob.xMax, plateLength, blob.yMin, buffer));
+						blob.xMax = (*it).xMax;
+					}
 					blob.xMax = (blob.xMax > (*it).xMax) ? blob.xMax : (*it).xMax;
 				}
-				else if ((tempBlobHR.diagonal <= tempBlobV.diagonal)&&(tempBlobHR.diagonal <= tempBlobH.diagonal) && (tempBlobHR.diagonal <= tempBlobVR.diagonal))
+				else if ((tempBlobHR <= tempBlobV)&&(tempBlobHR <= tempBlobH) && (tempBlobHR <= tempBlobVR))
 				{
-					double buffer = (*it).transform.yOffset;
+					buffer = (*it).transform.yOffset;
 					(*it).transform.rotation = 1;
 					(*it).transform.yOffset = (*it).transform.xOffset;
 					(*it).transform.xOffset = buffer + blob.xMax;
@@ -223,7 +264,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 				}
 				else 
 				{
-					double buffer = (*it).transform.xOffset;
+					buffer = (*it).transform.xOffset;
 					(*it).transform.rotation = 1;
 					(*it).transform.xOffset = (*it).transform.yOffset;
 					(*it).transform.yOffset = buffer + blob.yMax;
@@ -231,12 +272,7 @@ void arrangeModels(double plateWidth, double plateLength, std::vector<box>&b)
 					blob.xMax = (blob.xMax > (*it).yMax)? blob.xMax : (*it).yMax;
 					std::cout << "Rotated VR" <<std::endl;
 				}
-
 			}
-
-
-			//Create Concavity Points
-
 		}
 	}
 	for (std::vector<box>::iterator it = b.begin() ; it != b.end(); ++it)
